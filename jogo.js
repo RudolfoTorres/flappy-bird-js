@@ -130,7 +130,7 @@ function criaCanos() {
             const cabecaDoFlappy = globais.flappyBird.y;
             const peDoFlappy = globais.flappyBird.y + globais.flappyBird.altura;
 
-            if (globais.flappyBird.x >= par.x) {            
+            if ((globais.flappyBird.x + globais.flappyBird.largura) >= par.x) {            
                 if (cabecaDoFlappy <= par.canoCeu.y) {
                     return true;
                 }
@@ -155,7 +155,8 @@ function criaCanos() {
                 par.x = par.x - 2;
 
                 if (canos.temColisaoComFlappyBird(par)) {
-                    mudaParaTela(Telas.INICIO);
+                    somHIT.play();
+                    mudaParaTela(Telas.GAME_OVER);
                 }
 
                 if (par.x + canos.largura <= 0) {
@@ -196,9 +197,7 @@ function criaFlappyBird() {
             if (fazColisao(flappyBird, globais.chao)) {
                 somHIT.play();
                 
-                setTimeout(() => {
-                    mudaParaTela(Telas.INICIO);
-                }, 500);
+                mudaParaTela(Telas.GAME_OVER);
                 return;
             }
             flappyBird.velocidade = flappyBird.velocidade + flappyBird.gravidade;
@@ -256,6 +255,47 @@ const mensagemGetReady = {
     }
 }
 
+// [Mensagem de GameOver]
+const mensagemGameOver = {
+    spriteX: 134,
+    spriteY: 153,
+    largura: 226,
+    altura: 200,
+    x: (canvas.width / 2) - 226 / 2,
+    y: 50,
+    desenha() {
+        contexto.drawImage(
+            sprites, 
+            mensagemGameOver.spriteX, mensagemGameOver.spriteY, 
+            mensagemGameOver.largura, mensagemGameOver.altura, 
+            mensagemGameOver.x, mensagemGameOver.y,
+            mensagemGameOver.largura, mensagemGameOver.altura
+        );
+    }
+}
+
+//[Placar]
+function criaPlacar() {
+    const placar = {
+        pontuacao: 0,
+        desenha() {
+            contexto.font = '20px "Press Start 2P"';
+            contexto.textAlign = 'right'
+            contexto.fillStyle = 'white'
+            contexto.fillText(placar.pontuacao, canvas.width - 20, 40)
+        },
+        atualiza() {
+            const intervaloDeFrames = 50;
+            const passouOIntervalo = frames % intervaloDeFrames === 0;
+
+            if (passouOIntervalo) {
+                placar.pontuacao = placar.pontuacao + 1;
+            }
+        },
+    }
+    return placar;
+}
+
 //
 // Telas
 //
@@ -291,11 +331,15 @@ const Telas = {
 };
 
 Telas.JOGO = {
+    inicializa() {
+        globais.placar = criaPlacar();
+    },
     desenha() {
         planoDeFundo.desenha();
         globais.flappyBird.desenha();
         globais.canos.desenha();
-        globais.chao.desenha();    
+        globais.chao.desenha();
+        globais.placar.desenha();
     },
     click() {
         globais.flappyBird.pula();
@@ -304,6 +348,19 @@ Telas.JOGO = {
         globais.flappyBird.atualiza();
         globais.chao.atualiza();
         globais.canos.atualiza();
+        globais.placar.atualiza();
+    }
+};
+
+Telas.GAME_OVER = {
+    desenha() { 
+        mensagemGameOver.desenha();
+    },
+    atualiza() {
+
+    },
+    click() {
+        mudaParaTela(Telas.INICIO);
     }
 }
 
